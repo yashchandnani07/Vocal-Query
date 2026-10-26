@@ -79,7 +79,7 @@ single-use token that expires after a few minutes.
 | `server.js` | Express routes: `/api/demo`, `/api/import`, `/api/schema`, `/api/live-session`, `/api/run`, `/api/log` |
 | `db.js` | The only file that touches Postgres. Loads the `sql/` files, the safety check, runs queries |
 | `ai.js` | Gemini Live: system prompt, the 3 tools (`run_sql`, `confirm_pending_sql`, `cancel_pending_sql`), token |
-| `public/` | `index.html`, `import.html`, `app.html` plus their CSS/JS. `voice.js` = Live session + mic + speaker |
+| `public/` | `index.html`, `import.html`, `app.html` plus their CSS/JS. `voice.js` = Live session + mic + speaker. `diagrams.js` = schema visualizer + Chen ER diagram |
 | `neon.ts`, `.neon` | Neon project link (created by `neon init`) |
 
 ## Try saying

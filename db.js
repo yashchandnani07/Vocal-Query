@@ -61,6 +61,7 @@ export async function getSchema() {
     table.columns.push({
       name: col.column_name,
       type: col.data_type,
+      notNull: col.is_nullable === 'NO',
       pk: Boolean(isKey('PRIMARY KEY')),
       fk: fk ? `${fk.references_table}.${fk.references_column}` : null,
     })
