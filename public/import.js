@@ -45,7 +45,7 @@ demoBtn.addEventListener('click', () => {
 uploadBtn.addEventListener('click', () => {
   work(uploadBtn, 'upload-error', 'Loading...', async () => {
     const text = await chosenFile.text() // read the file in the browser
-    await post('/api/import', { sql: text })
+    await post('/api/import', { sql: text, fileName: chosenFile.name })
   })
 })
 

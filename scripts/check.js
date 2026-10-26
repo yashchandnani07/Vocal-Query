@@ -8,8 +8,9 @@ for (const file of files) {
   execFileSync(process.execPath, ['--check', file])
   console.log('ok  ', file)
 }
-const sqlFiles = ['00_drop_tables.sql', '01_create_tables.sql', '02_insert_sample_data.sql', '03_create_log_table.sql',
-  'app/list_columns.sql', 'app/list_keys.sql', 'app/log_insert.sql', 'app/log_recent.sql']
+const sqlFiles = ['00_drop_tables.sql', '01_create_tables.sql', '02_insert_sample_data.sql', '03_create_app_tables.sql',
+  'app/list_columns.sql', 'app/list_keys.sql', 'app/log_insert.sql', 'app/log_recent.sql',
+  'app/database_insert.sql', 'app/database_latest.sql', 'app/database_list.sql']
 for (const file of sqlFiles) {
   if (!fs.existsSync(`sql/${file}`)) throw new Error(`missing sql/${file}`)
   console.log('ok  ', `sql/${file}`)

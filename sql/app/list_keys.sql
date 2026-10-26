@@ -15,4 +15,4 @@ JOIN information_schema.constraint_column_usage ccu
   ON ccu.constraint_name = tc.constraint_name
 WHERE tc.table_schema = 'public'
   AND tc.constraint_type IN ('PRIMARY KEY', 'FOREIGN KEY')
-  AND kcu.table_name <> 'voice_log';
+  AND kcu.table_name NOT IN ('voice_log', 'database');

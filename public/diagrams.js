@@ -248,7 +248,7 @@ function forceLayout(names, edges) {
     const angle = (2 * Math.PI * i) / names.length
     pos[name] = { x: Math.cos(angle) * 300, y: Math.sin(angle) * 300 }
   })
-  const K = 290 + 40 * Math.max(0, names.length - 3) // preferred distance; bigger groups get more room
+  const K = names.length <= 2 ? 380 : 290 + 40 * Math.max(0, names.length - 3) // preferred distance; bigger groups get more room
   const STEPS = 300
   for (let step = 0; step < STEPS; step++) {
     const move = {}
@@ -354,15 +354,21 @@ function drawChenEr(view, schema) {
       lineLayer.append(svgEl('line', { x1: a.x, y1: a.y, x2: b.x, y2: b.y, class: 'chen-line' }))
     }
   }
-  const label = (from, to, text) => { // cardinality (1 / N) just past the diamond's tip, above the line
+  // Cardinality (1 / N): halfway between the diamond's tip and the entity's edge, just above the line
+  const label = (from, to, text, entityWidth) => {
     const dx = to.x - from.x, dy = to.y - from.y
     const len = Math.max(1, Math.hypot(dx, dy))
+    const ux = Math.abs(dx / len), uy = Math.abs(dy / len)
+    const tip = 1 / (ux / 62 + uy / 34) // distance from the diamond's centre to its edge along this line
+    const edge = len - (entityWidth / 2) * ux - 22 * uy // distance to the entity's edge along this line
+    const at = edge - tip > 26 ? (tip + edge) / 2 : tip + 12
     let px = -dy / len, py = dx / len // a direction at right angles to the line
     if (py > 0) { px = -px; py = -py } // always the upper side, so it never hits the caption below
-    const x = from.x + (dx / len) * 80 + px * 14
-    const y = from.y + (dy / len) * 80 + py * 14
+    const x = from.x + (dx / len) * at + px * 13
+    const y = from.y + (dy / len) * at + py * 13
     shapeLayer.append(svgEl('text', { x, y, class: 'chen-card' }, text))
   }
+  const entityW = (name) => textWidth(name.toUpperCase(), '600 14px Inter, sans-serif') + 44
 
   // Relationships: one diamond per foreign key
   const diamondsOf = {} // entity -> diamond points (used to keep attributes out of the way)
@@ -382,8 +388,8 @@ function drawChenEr(view, schema) {
     const fkColumn = schema.tables.find((t) => t.name === r.from).columns.find((c) => c.name === r.column)
     line(parent, d, false) // parent side: partial participation
     line(child, d, Boolean(fkColumn?.notNull)) // child side: double line when the FK is NOT NULL
-    label(d, parent, '1')
-    label(d, child, 'N')
+    label(d, parent, '1', entityW(r.to))
+    label(d, child, 'N', entityW(r.from))
 
     const diamond = svgEl('g', { class: 'chen-rel' })
     diamond.append(svgEl('polygon', { points: `${d.x},${d.y - 34} ${d.x + 62},${d.y} ${d.x},${d.y + 34} ${d.x - 62},${d.y}` }))

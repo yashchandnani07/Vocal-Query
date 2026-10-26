@@ -39,6 +39,9 @@ try {
   // --- Neon Postgres ---
   check('POST /api/demo loads demo tables', (await api('/api/demo', {})).ok === true)
 
+  const dbs = await api('/api/databases')
+  check('demo load is recorded in the database table', dbs.rows[0]?.source === 'demo', `${dbs.rows.length} rows, newest: ${dbs.rows[0]?.name}`)
+
   const schema = await api('/api/schema')
   check('GET /api/schema has 3 tables', schema.tables.length === 3, schema.tables.map((t) => t.name).join(', '))
   check('foreign keys found for ER diagram', schema.relations.length === 2,
@@ -61,6 +64,10 @@ try {
 
   const log = await api('/api/log')
   check('voice_log saved the commands', log.rows[0]?.spoken_text === 'smoke test delete', `${log.rows.length} rows`)
+  check('voice_log row is linked to the database table', log.rows[0]?.database_id === dbs.rows[0]?.id, `database_id ${log.rows[0]?.database_id} = ${log.rows[0]?.database_name}`)
+
+  const appTable = await api('/api/run', { sql: 'DELETE FROM voice_log WHERE id = 1', confirmed: true })
+  check('app tables cannot be changed by a voice command', Boolean(appTable.error), appTable.error)
 
   // --- Gemini Live ---
   const live = await api('/api/live-session', {})

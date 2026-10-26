@@ -34,11 +34,12 @@ function openTab(name) {
   document.querySelectorAll('.tab, .rail-btn[data-tab]').forEach((b) => {
     b.classList.toggle('active', b.dataset.tab === name)
   })
-  for (const view of ['schema', 'er', 'log']) {
+  for (const view of ['schema', 'er', 'log', 'dbs']) {
     document.getElementById('view-' + view).hidden = view !== name
   }
   if (name === 'er') renderEr()
   if (name === 'log') refreshLog()
+  if (name === 'dbs') refreshDatabases()
 }
 
 // ---------- Schema ----------
@@ -114,8 +115,41 @@ async function refreshLog() {
   }
 }
 
+// ---------- Databases tab (the database table: everything the user loaded or uploaded) ----------
+
+async function refreshDatabases() {
+  const view = document.getElementById('view-dbs')
+  try {
+    const { rows } = await getJson('/api/databases')
+    view.replaceChildren(rows.length ? databasesTable(rows) : el('p', 'muted pad', 'No database yet. Load the demo or upload a .sql file on the Import page.'))
+  } catch (err) {
+    view.replaceChildren(el('p', 'muted pad', 'Could not load the databases: ' + err.message))
+  }
+}
+
+function databasesTable(rows) {
+  const table = el('table', 'data-table')
+  const headRow = el('tr')
+  ;['ID', 'Name', 'Source', 'File', 'Added', 'Queries'].forEach((h) => headRow.append(el('th', '', h)))
+  const thead = el('thead')
+  thead.append(headRow)
+  table.append(thead)
+
+  const body = el('tbody')
+  for (const r of rows) {
+    const tr = el('tr')
+    const added = new Date(r.created_at).toLocaleString([], { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+    tr.append(el('td', 'nowrap muted', r.id), el('td', '', r.name))
+    tr.append(chipCell(r.source, r.source === 'upload' ? 'chip-blue' : 'chip-purple'))
+    tr.append(el('td', 'mono', r.file_name || '-'), el('td', 'nowrap muted', added), el('td', 'nowrap', r.queries))
+    body.append(tr)
+  }
+  table.append(body)
+  return table
+}
+
 function logTable(rows) {
-  const headers = ['Time', 'You said', 'SQL', 'Type', 'Status', 'Rows']
+  const headers = ['Time', 'Database', 'You said', 'SQL', 'Type', 'Status', 'Rows']
   const table = el('table', 'data-table')
   const headRow = el('tr')
   headers.forEach((h) => headRow.append(el('th', '', h)))
@@ -127,7 +161,7 @@ function logTable(rows) {
   for (const r of rows) {
     const tr = el('tr')
     const time = new Date(r.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    tr.append(el('td', 'nowrap muted', time), el('td', '', r.spoken_text || '-'), el('td', 'mono sql-cell', r.generated_sql))
+    tr.append(el('td', 'nowrap muted', time), el('td', 'nowrap', r.database_name || '-'), el('td', '', r.spoken_text || '-'), el('td', 'mono sql-cell', r.generated_sql))
     tr.append(chipCell(r.operation, 'chip-purple'), chipCell(r.status, r.status === 'OK' ? 'chip-green' : 'chip-red'))
     tr.append(el('td', 'nowrap', r.rows_affected ?? '-'))
     body.append(tr)

@@ -42,19 +42,24 @@ server and tests Neon + Gemini Live end to end). Voice needs Chrome or Edge and 
 | `00_drop_tables.sql` | DDL `DROP` | "Load demo database" (start fresh) |
 | `01_create_tables.sql` | DDL `CREATE TABLE` | "Load demo database" |
 | `02_insert_sample_data.sql` | DML `INSERT` | "Load demo database" |
-| `03_create_log_table.sql` | DDL `CREATE TABLE` | every server start (`IF NOT EXISTS`) |
+| `03_create_app_tables.sql` | DDL `CREATE TABLE`, `ALTER TABLE` | every server start (`IF NOT EXISTS`): the app's own tables `database` and `voice_log` |
 | `app/list_columns.sql` | `SELECT` on `information_schema` | schema view + told to Gemini |
 | `app/list_keys.sql` | `SELECT` on `information_schema` | PK/FK for the ER diagram |
-| `app/log_insert.sql` | DML `INSERT` with `$1..$5` | after every voice query |
-| `app/log_recent.sql` | `SELECT ... ORDER BY ... LIMIT` | the Query log tab |
+| `app/log_insert.sql` | DML `INSERT` with `$1..$6` | after every voice query |
+| `app/log_recent.sql` | `SELECT` + `LEFT JOIN` | the Query log tab |
+| `app/database_insert.sql` | DML `INSERT ... RETURNING` | when a database is loaded or uploaded |
+| `app/database_latest.sql` | `SELECT ... LIMIT 1` | to link each query to the current database |
+| `app/database_list.sql` | `SELECT` + `LEFT JOIN` + `GROUP BY` | the Databases tab |
 | `examples/*.sql` | study material | never run by the app |
 | `history/generated_queries.sql` | generated | every query Gemini wrote, appended as it runs |
 
 That's the whole list. The only other SQL is the statement Gemini writes for you, plus
 `BEGIN` / `COMMIT` / `ROLLBACK` in `db.js`.
 
-**What is stored about the user?** Only the `voice_log` table: what you said, the SQL, the operation,
-OK/ERROR, rows affected and the time. Look at it with `SELECT * FROM voice_log ORDER BY id DESC;`
+**What is stored about the user?** Only the app's own two tables, linked by a foreign key:
+`database` (one row for every database loaded or uploaded) 1 → N `voice_log` (what you said, the SQL,
+the operation, OK/ERROR, rows affected, the time). Look at them with `SELECT * FROM database;` and
+`SELECT * FROM voice_log ORDER BY id DESC;`
 
 ## How one voice command flows
 

@@ -22,16 +22,36 @@ function readSql(file) {
   return fs.readFileSync(path.join(SQL_DIR, file), 'utf8')
 }
 
-// 1. On server start: make sure the voice_log table exists.
-export async function setupLogTable() {
-  await pool.query(readSql('03_create_log_table.sql'))
+// 1. On server start: make sure the app's own tables (database, voice_log) exist.
+export async function setupAppTables() {
+  await pool.query(readSql('03_create_app_tables.sql'))
 }
 
-// 2. "Load demo database": drop, create, insert.
+// 2. "Load demo database": drop, create, insert, then remember it in the database table.
 export async function loadDemo() {
   await runScript(
     readSql('00_drop_tables.sql') + readSql('01_create_tables.sql') + readSql('02_insert_sample_data.sql'),
   )
+  return recordDatabase('Demo shop', 'demo', null)
+}
+
+// Add a row to the database table (called after a demo load or an upload). Returns the new id.
+export async function recordDatabase(name, source, fileName) {
+  const result = await pool.query(readSql('app/database_insert.sql'), [name, source, fileName])
+  return result.rows[0].id
+}
+
+// The database the user is working with = the newest row in the database table.
+// If nothing was loaded yet (the user went straight to "existing tables"), add that row now.
+async function activeDatabaseId() {
+  const latest = await pool.query(readSql('app/database_latest.sql'))
+  if (latest.rows.length) return latest.rows[0].id
+  return recordDatabase('Existing tables', 'existing', null)
+}
+
+// The "Databases" tab.
+export async function getDatabases() {
+  return (await pool.query(readSql('app/database_list.sql'))).rows
 }
 
 // 3. "Upload a .sql file": run the whole file inside one transaction (all or nothing).
@@ -99,7 +119,10 @@ export function checkSql(raw) {
   else return { ok: false, error: `${operation || 'This'} statements are not supported.` }
 
   if (['UPDATE', 'DELETE'].includes(operation) && !/\bwhere\b/i.test(sql)) kind = 'danger'
-  if (kind !== 'read' && /\bvoice_log\b/i.test(sql)) return { ok: false, error: 'voice_log is read-only.' }
+  // The app's own tables can be read but never changed by a voice command
+  if (kind !== 'read' && /\b(from|into|update|join|table)\s+"?(voice_log|database)\b/i.test(sql)) {
+    return { ok: false, error: 'voice_log and database are the app’s own tables and are read-only.' }
+  }
   return { ok: true, sql, kind, operation }
 }
 
@@ -137,9 +160,11 @@ export async function runSql(sql, kind) {
   }
 }
 
-// Save what the user said + the SQL into voice_log, and append it to sql/history/generated_queries.sql
+// Save what the user said + the SQL into voice_log (linked to the current database),
+// and append it to sql/history/generated_queries.sql
 export async function logQuery({ said, sql, operation, ok, count }) {
-  await pool.query(readSql('app/log_insert.sql'), [said || null, sql, operation, ok ? 'OK' : 'ERROR', count ?? null])
+  const databaseId = await activeDatabaseId()
+  await pool.query(readSql('app/log_insert.sql'), [said || null, sql, operation, ok ? 'OK' : 'ERROR', count ?? null, databaseId])
 
   const time = new Date().toISOString().replace('T', ' ').slice(0, 16)
   const heard = said ? ` | said: "${said.replace(/\s+/g, ' ')}"` : ''

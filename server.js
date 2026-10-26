@@ -12,12 +12,12 @@ app.use(express.static('public', { extensions: ['html'] })) // /import -> public
 app.post('/api/login', login)
 app.use('/api', requireLogin)
 
-// On Vercel the server has no "start" moment, so make sure voice_log exists on the first API call.
-let logTableReady = false
+// On Vercel the server has no "start" moment, so make sure the app's tables exist on the first API call.
+let appTablesReady = false
 app.use('/api', async (req, res, next) => {
-  if (!logTableReady) {
-    await db.setupLogTable()
-    logTableReady = true
+  if (!appTablesReady) {
+    await db.setupAppTables()
+    appTablesReady = true
   }
   next()
 })
@@ -33,7 +33,14 @@ app.post('/api/import', async (req, res) => {
   const sql = String(req.body.sql || '')
   if (!sql.trim()) return res.status(400).json({ error: 'The file is empty.' })
   await db.runScript(sql)
+  const fileName = String(req.body.fileName || 'upload.sql').slice(0, 200)
+  await db.recordDatabase(fileName.replace(/\.sql$/i, '').slice(0, 100), 'upload', fileName)
   res.json({ ok: true })
+})
+
+// Every database that was loaded or uploaded, with how many queries ran on each
+app.get('/api/databases', async (req, res) => {
+  res.json({ rows: await db.getDatabases() })
 })
 
 // Tables, columns and relationships
@@ -83,7 +90,7 @@ app.use((err, req, res, next) => {
 // On Vercel the app is exported and Vercel runs it; on your laptop we start our own server.
 if (!process.env.VERCEL) {
   const PORT = process.env.PORT || 3000
-  await db.setupLogTable()
+  await db.setupAppTables()
   app.listen(PORT, () => console.log(`Vocal Query running on http://localhost:${PORT}`))
 }
 
