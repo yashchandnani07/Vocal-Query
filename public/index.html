@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Vocal Query - Talk to your Postgres database</title>
+  <meta name="description" content="Speak a question, Gemini writes the SQL, Neon Postgres runs it and the answer is spoken back.">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/base.css">
+  <link rel="stylesheet" href="/site.css">
+</head>
+<body>
+
+  <!-- Top navigation -->
+  <header class="nav">
+    <a class="brand" href="/"><img class="brand-mark" src="/logo.svg" alt="">Vocal Query</a>
+    <nav class="nav-links">
+      <a href="#how">How it works</a>
+      <a href="#features">Features</a>
+      <a href="#architecture">Architecture</a>
+      <a href="#sql-files">SQL files</a>
+    </nav>
+    <div class="nav-right">
+      <a class="btn btn-ghost btn-sm" href="/app">Open workspace</a>
+      <a class="btn btn-primary btn-sm" href="/import">Get started</a>
+    </div>
+  </header>
+
+  <main>
+    <!-- Hero -->
+    <section class="hero">
+      <div class="wrap">
+        <span class="pill"><span class="dot"></span>Powered by Gemini 3.8 Live + Neon Postgres</span>
+        <h1 class="display">Stop typing SQL. <span>Start talking to your data.</span></h1>
+        <p class="hero-sub">Vocal Query is a voice assistant for your Postgres database. Ask a question out loud, Gemini writes the SQL, it runs on Neon, and the answer is spoken back to you.</p>
+        <div class="hero-buttons">
+          <a class="btn btn-primary btn-lg" href="/import">Get started &rarr;</a>
+          <a class="btn btn-secondary btn-lg" href="/app">See the workspace</a>
+        </div>
+        <p class="hero-note">No sign-up &middot; Load a demo database in one click</p>
+      </div>
+    </section>
+
+    <!-- Static mock of the workspace (HTML + CSS only) -->
+    <section class="mock-section">
+      <div class="wrap">
+        <div class="mock reveal" aria-hidden="true">
+          <div class="mock-rail">
+            <img src="/logo.svg" alt="">
+            <span class="rail-icon on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 4v16"/></svg></span>
+            <span class="rail-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="3"/><circle cx="18" cy="18" r="3"/><path d="M8 8l8 8"/></svg></span>
+            <span class="rail-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+          </div>
+
+          <div class="mock-main">
+            <div class="crumbs">Database / <b>public</b></div>
+            <div class="table-tabs">
+              <span class="tab on">customers</span>
+              <span class="tab">products</span>
+              <span class="tab">orders</span>
+            </div>
+            <table class="mock-table">
+              <thead><tr><th>customer_id</th><th>name</th><th>email</th><th>city</th></tr></thead>
+              <tbody>
+                <tr class="hit"><td>1 <span class="key">PK</span></td><td>Aarav Mehta</td><td>aarav@mail.com</td><td>Mumbai</td></tr>
+                <tr><td>2</td><td>Diya Sharma</td><td>diya@mail.com</td><td>Delhi</td></tr>
+                <tr class="hit"><td>3</td><td>Rohan Patel</td><td>rohan@mail.com</td><td>Mumbai</td></tr>
+                <tr><td>4</td><td>Sara Khan</td><td>sara@mail.com</td><td>Pune</td></tr>
+                <tr class="hit"><td>5</td><td>Vikram Rao</td><td>vikram@mail.com</td><td>Mumbai</td></tr>
+                <tr><td>6</td><td>Neha Iyer</td><td>neha@mail.com</td><td>Chennai</td></tr>
+                <tr><td>7</td><td>Kabir Singh</td><td>kabir@mail.com</td><td>Delhi</td></tr>
+              </tbody>
+            </table>
+            <div class="mock-meta">3 tables &middot; 7 rows shown</div>
+          </div>
+
+          <div class="mock-chat">
+            <div class="chat-head">Talk to your data</div>
+            <div class="chat-body">
+              <div class="bubble-user">Which city has the most customers?</div>
+              <div class="bubble-ai">
+                <div class="who"><span class="orb-dot"></span>Vocal Query</div>
+                Mumbai has the most customers, with 3 of them.
+                <div class="sql-box">
+                  <span class="tag">READ ONLY</span><br>
+                  <span class="kw">SELECT</span> city, <span class="kw">COUNT</span>(*) <span class="kw">AS</span> total <span class="kw">FROM</span> customers <span class="kw">GROUP BY</span> city <span class="kw">ORDER BY</span> total <span class="kw">DESC LIMIT</span> 1
+                </div>
+              </div>
+            </div>
+            <div class="chat-input">
+              <span>Ask something or tap the orb</span>
+              <button class="orb" tabindex="-1"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Stats strip -->
+    <section class="stats">
+      <div class="wrap">
+        <div class="stat"><div class="num display">1 tap</div><p>to start talking</p></div>
+        <div class="stat"><div class="num display">6</div><p>SQL queries the app needs</p></div>
+        <div class="stat"><div class="num display">100%</div><p>of queries saved to voice_log</p></div>
+        <div class="stat"><div class="num display">0</div><p>SQL you need to type</p></div>
+      </div>
+    </section>
+
+    <!-- How it works -->
+    <section class="section" id="how">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <span class="eyebrow">How it works</span>
+          <h2 class="display">Four steps from voice to answer.</h2>
+          <p>No query editor, no syntax. You talk, the app does the SQL.</p>
+        </div>
+        <div class="steps">
+          <div class="card step reveal"><span class="no">01</span><h3>Speak</h3><p>Tap the orb and ask in plain English. Your mic audio streams straight to Gemini Live.</p><em>"Which city has the most customers?"</em></div>
+          <div class="card step reveal"><span class="no">02</span><h3>Gemini writes SQL</h3><p>Gemini sees your table and column names and calls a run_sql tool with a query.</p><em>SELECT city, COUNT(*) ...</em></div>
+          <div class="card step reveal"><span class="no">03</span><h3>You confirm changes</h3><p>SELECTs run right away. INSERT, UPDATE and DELETE wait for your yes first.</p><em>Delete 1 row? Yes / No</em></div>
+          <div class="card step reveal"><span class="no">04</span><h3>See + hear the answer</h3><p>Rows appear in a table and the answer is spoken back. The query is saved to voice_log.</p><em>"Mumbai, with 3 customers."</em></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features -->
+    <section class="section" id="features">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <span class="eyebrow">Features</span>
+          <h2 class="display">Everything a lab demo needs.</h2>
+          <p>Small on purpose. Every feature below works today.</p>
+        </div>
+        <div class="card features reveal">
+          <div class="feature">
+            <span class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg></span>
+            <div><h3>Voice in &amp; out</h3><p>Talk to your database and hear the answer back, powered by Gemini Live.</p></div>
+            <span class="badge">LIVE</span>
+          </div>
+          <div class="feature">
+            <span class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 4v16"/></svg></span>
+            <div><h3>Schema explorer</h3><p>Browse every table, its columns, types and keys.</p></div>
+            <span class="badge">LIVE</span>
+          </div>
+          <div class="feature">
+            <span class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><path d="M10 6.5h4a3 3 0 0 1 3 3V14"/></svg></span>
+            <div><h3>Auto ER diagram</h3><p>Relationships drawn from your foreign keys, no setup.</p></div>
+            <span class="badge">LIVE</span>
+          </div>
+          <div class="feature">
+            <span class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg></span>
+            <div><h3>Safe by default</h3><p>SELECTs are read-only. Changes need your yes.</p></div>
+            <span class="badge">LIVE</span>
+          </div>
+          <div class="feature">
+            <span class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+            <div><h3>Query log saved in Postgres</h3><p>Every spoken command lands in the voice_log table.</p></div>
+            <span class="badge">LIVE</span>
+          </div>
+          <div class="feature">
+            <span class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></svg></span>
+            <div><h3>Upload your own .sql</h3><p>Bring a dump file and start asking questions about it.</p></div>
+            <span class="badge">LIVE</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Architecture -->
+    <section class="section" id="architecture">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <span class="eyebrow">Architecture</span>
+          <h2 class="display">One small server in the middle.</h2>
+          <p>The browser talks to Gemini directly for audio. Everything that touches the database goes through Express.</p>
+        </div>
+        <div class="flow reveal">
+          <div class="card node"><b>Browser mic</b><small>Speech in, speech out</small></div>
+          <div class="arrow"><span>audio</span></div>
+          <div class="card node ai"><b>Gemini 3.8 Live</b><small>WebSocket, one-time token</small></div>
+          <div class="arrow"><span>run_sql</span></div>
+          <div class="card node"><b>Express /api/run</b><small>Safety check on every query</small></div>
+          <div class="arrow"><span>pg pool</span></div>
+          <div class="card node db"><b>Neon Postgres</b><small>Pooled pg connection</small></div>
+        </div>
+        <p class="back-note reveal">Rows come back the same way, then Gemini turns them into a spoken answer.</p>
+
+        <div class="card sql-files reveal" id="sql-files">
+          <h3>Every query lives in sql/</h3>
+          <p>No SQL is hidden inside JavaScript. Open the folder and read all of it.</p>
+          <div class="file-list">
+            <code>00_drop_tables.sql</code>
+            <code>01_create_tables.sql</code>
+            <code>02_insert_sample_data.sql</code>
+            <code>03_create_log_table.sql</code>
+            <code class="app">app/list_columns.sql</code>
+            <code class="app">app/list_keys.sql</code>
+            <code class="app">app/log_insert.sql</code>
+            <code class="app">app/log_recent.sql</code>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Final call to action -->
+    <section class="wrap">
+      <div class="cta reveal">
+        <h2 class="display">Talk to your database today.</h2>
+        <p>Load the demo data and ask your first question in under a minute.</p>
+        <div class="hero-buttons">
+          <a class="btn btn-primary btn-lg" href="/import">Get started &rarr;</a>
+          <a class="btn btn-secondary btn-lg" href="/app">Open workspace</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">Vocal Query &middot; DBMS lab project</footer>
+
+  <script>
+    // Fade sections in as they scroll into view
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible')
+          observer.unobserve(entry.target)
+        }
+      })
+    }, { threshold: 0.12 })
+    document.querySelectorAll('.reveal').forEach((el) => observer.observe(el))
+  </script>
+</body>
+</html>
