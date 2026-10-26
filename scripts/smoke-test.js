@@ -11,18 +11,31 @@ function check(name, condition, detail = '') {
   if (!condition) failures++
 }
 
+let cookie = '' // the login cookie, filled in after POST /api/login
+
 async function api(path, body) {
-  const res = await fetch(BASE + path, body
-    ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
-    : {})
+  const headers = { Cookie: cookie }
+  if (body) headers['Content-Type'] = 'application/json'
+  const res = await fetch(BASE + path, body ? { method: 'POST', headers, body: JSON.stringify(body) } : { headers })
   return res.json()
 }
 
 // Start the real server
-const server = spawn(process.execPath, ['server.js'], { env: { ...process.env, PORT }, stdio: ['ignore', 'pipe', 'inherit'] })
+const server = spawn(process.execPath, ['server.js'], { env: { ...process.env, PORT, APP_PASSWORD: 'smoke-test-password' }, stdio: ['ignore', 'pipe', 'inherit'] })
 await new Promise((resolve) => server.stdout.on('data', (d) => d.toString().includes('running') && resolve()))
 
 try {
+  // --- Password ---
+  const noLogin = await fetch(BASE + '/api/schema')
+  check('API refuses requests without login (401)', noLogin.status === 401)
+
+  const wrong = await fetch(BASE + '/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: 'nope' }) })
+  check('wrong password is rejected (401)', wrong.status === 401)
+
+  const right = await fetch(BASE + '/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: 'smoke-test-password' }) })
+  cookie = right.headers.get('set-cookie')?.split(';')[0] || ''
+  check('right password logs in and sets a cookie', right.ok && cookie.startsWith('vq_auth='))
+
   // --- Neon Postgres ---
   check('POST /api/demo loads demo tables', (await api('/api/demo', {})).ok === true)
 

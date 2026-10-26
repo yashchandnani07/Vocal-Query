@@ -3,7 +3,7 @@
 import { execFileSync } from 'node:child_process'
 import fs from 'node:fs'
 
-const files = ['server.js', 'db.js', 'ai.js', ...fs.readdirSync('public').filter((f) => f.endsWith('.js')).map((f) => `public/${f}`)]
+const files = ['server.js', 'db.js', 'ai.js', 'auth.js', ...fs.readdirSync('public').filter((f) => f.endsWith('.js')).map((f) => `public/${f}`)]
 for (const file of files) {
   execFileSync(process.execPath, ['--check', file])
   console.log('ok  ', file)

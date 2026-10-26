@@ -22,6 +22,9 @@ GEMINI_API_KEY=...        # Google AI Studio key
 GEMINI_LIVE_MODEL=gemini-3.8-live
 ```
 
+`APP_PASSWORD` is the one shared password for the app (the `/api` routes need a login cookie; see
+`auth.js`). Locally it is optional; on Vercel it is required, otherwise the API answers 503.
+
 Other scripts: `npm run build` (syntax check of all JS + SQL files present) and `npm test` (starts the
 server and tests Neon + Gemini Live end to end). Voice needs Chrome or Edge and microphone permission.
 

@@ -1,0 +1,6 @@
+{
+  "cleanUrls": true,
+  "functions": {
+    "server.js": { "includeFiles": "{public,sql}/**" }
+  }
+}

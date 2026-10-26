@@ -2,10 +2,25 @@
 import express from 'express'
 import * as db from './db.js'
 import { createLiveSession } from './ai.js'
+import { requireLogin, login } from './auth.js'
 
 const app = express()
 app.use(express.json({ limit: '5mb' })) // 5mb so uploaded .sql files fit
 app.use(express.static('public', { extensions: ['html'] })) // /import -> public/import.html
+
+// Password: everything under /api needs the login cookie, except /api/login
+app.post('/api/login', login)
+app.use('/api', requireLogin)
+
+// On Vercel the server has no "start" moment, so make sure voice_log exists on the first API call.
+let logTableReady = false
+app.use('/api', async (req, res, next) => {
+  if (!logTableReady) {
+    await db.setupLogTable()
+    logTableReady = true
+  }
+  next()
+})
 
 // Load the demo database (customers, products, orders)
 app.post('/api/demo', async (req, res) => {
@@ -65,6 +80,11 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: err.message })
 })
 
-const PORT = process.env.PORT || 3000
-await db.setupLogTable()
-app.listen(PORT, () => console.log(`Vocal Query running on http://localhost:${PORT}`))
+// On Vercel the app is exported and Vercel runs it; on your laptop we start our own server.
+if (!process.env.VERCEL) {
+  const PORT = process.env.PORT || 3000
+  await db.setupLogTable()
+  app.listen(PORT, () => console.log(`Vocal Query running on http://localhost:${PORT}`))
+}
+
+export default app

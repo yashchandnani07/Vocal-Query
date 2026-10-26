@@ -11,6 +11,12 @@ const MAX_ROWS = 200
 // A pool keeps a few connections open and reuses them (DATABASE_URL is Neon's pooled URL).
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 5 })
 
+// On Vercel, let the platform close idle connections before it pauses the function.
+if (process.env.VERCEL) {
+  const { attachDatabasePool } = await import('@vercel/functions')
+  attachDatabasePool(pool)
+}
+
 // Read a .sql file from the sql/ folder, e.g. readSql('app/list_columns.sql')
 function readSql(file) {
   return fs.readFileSync(path.join(SQL_DIR, file), 'utf8')
@@ -137,6 +143,7 @@ export async function logQuery({ said, sql, operation, ok, count }) {
 
   const time = new Date().toISOString().replace('T', ' ').slice(0, 16)
   const heard = said ? ` | said: "${said.replace(/\s+/g, ' ')}"` : ''
+  if (process.env.VERCEL) return // Vercel's disk is read-only; voice_log in Postgres still has everything
   fs.mkdirSync(path.dirname(HISTORY_FILE), { recursive: true })
   fs.appendFileSync(HISTORY_FILE, `-- [${time}] ${ok ? 'OK' : 'ERROR'} | ${count ?? 0} rows${heard}\n${sql};\n\n`)
 }
